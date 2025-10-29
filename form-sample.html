@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>فرم ساده — ورود نام و سن</title>
+<style>
+  :root{--bg:#f4f6f8;--card:#ffffff;--accent:#0b76ef;--muted:#666}
+  body{margin:0;font-family:Tahoma, "Helvetica Neue", Arial; background:var(--bg); color:#111}
+  .center {min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .card{width:100%; max-width:540px; background:var(--card); border-radius:12px; box-shadow:0 8px 30px rgba(10,20,40,0.08); padding:28px;}
+  h1{margin:0 0 12px 0; font-size:20px}
+  p.lead{margin:0 0 18px 0; color:var(--muted)}
+  label{display:block; margin-top:10px; font-size:14px; color:#333}
+  input[type="text"], input[type="number"]{width:100%; padding:10px 12px; margin-top:6px; border:1px solid #e2e6ea; border-radius:8px; font-size:15px; box-sizing:border-box;}
+  .actions{display:flex; gap:10px; margin-top:18px}
+  button{padding:10px 14px; border-radius:10px; border:0; cursor:pointer; font-size:15px;}
+  .btn-primary{background:var(--accent); color:white}
+  .btn-ghost{background:transparent; color:var(--accent); border:1px solid transparent}
+  .error{color:#b00020; margin-top:8px; font-size:13px}
+  .message {white-space:pre-line; font-size:16px; line-height:1.7; color:#111;}
+  .muted-small{color:var(--muted); font-size:13px; margin-top:12px}
+  .hidden{display:none}
+  footer{margin-top:18px; font-size:13px; color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="center">
+    <div id="entryCard" class="card" aria-live="polite">
+      <h1>اول بگو اسم‌ت چیه؟</h1>
+      <p class="lead">اسم و سن‌ت رو وارد کن تا ادامه بدیم.</p>
+      <label for="nameInput">اسم</label>
+      <input id="nameInput" type="text" placeholder="مثلاً: شاهرخ" autocomplete="name" />
+      <label for="ageInput">چند سالته؟</label>
+      <input id="ageInput" type="number" placeholder="مثلاً: 25" min="0" max="150" />
+      <div class="error" id="err" role="alert" aria-hidden="true"></div>
+      <div class="actions">
+        <button id="startBtn" class="btn-primary">ارسال و ادامه</button>
+        <button id="resetBtn" class="btn-ghost">پاک کردن</button>
+      </div>
+      <footer>این فقط یک نمونه صفحه است — اطلاعات ذخیره نمی‌شه.</footer>
+    </div>
+
+    <div id="messageCard" class="card hidden" aria-live="polite">
+      <h1 id="greeting">سلام</h1>
+      <div class="message" id="fullMessage"></div>
+      <div class="muted-small" id="note">اگر می‌خوای دوباره اسم یا سن رو تغییر بدی، دکمهٔ «بازگشت» رو بزن.</div>
+      <div style="margin-top:16px; display:flex; gap:10px;">
+        <button id="backBtn" class="btn-ghost">بازگشت</button>
+        <button id="startOver" class="btn-primary">شروع دوباره</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  function safeText(str){
+    const d=document.createTextNode(str);
+    const p=document.createElement('div');
+    p.appendChild(d);
+    return p.innerHTML;
+  }
+
+  const entry=document.getElementById('entryCard');
+  const message=document.getElementById('messageCard');
+  const nameInput=document.getElementById('nameInput');
+  const ageInput=document.getElementById('ageInput');
+  const err=document.getElementById('err');
+  const fullMessage=document.getElementById('fullMessage');
+  const greeting=document.getElementById('greeting');
+
+  document.getElementById('startBtn').addEventListener('click',()=>{
+    err.textContent='';
+    err.setAttribute('aria-hidden','true');
+    const name=nameInput.value.trim();
+    const age=ageInput.value.trim();
+    if(!name){
+      err.textContent='لطفاً اسم رو وارد کن.';
+      err.setAttribute('aria-hidden','false');
+      nameInput.focus();
+      return;
+    }
+    if(!age||isNaN(Number(age))){
+      err.textContent='لطفاً سن معتبر وارد کن.';
+      err.setAttribute('aria-hidden','false');
+      ageInput.focus();
+      return;
+    }
+    showMessage(name,age);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    nameInput.value='';
+    ageInput.value='';
+    err.textContent='';
+    err.setAttribute('aria-hidden','true');
+    nameInput.focus();
+  });
+
+  document.getElementById('backBtn').addEventListener('click',()=>{
+    message.classList.add('hidden');
+    entry.classList.remove('hidden');
+    nameInput.focus();
+  });
+
+  document.getElementById('startOver').addEventListener('click',()=>{
+    nameInput.value='';
+    ageInput.value='';
+    message.classList.add('hidden');
+    entry.classList.remove('hidden');
+    err.textContent='';
+    err.setAttribute('aria-hidden','true');
+    nameInput.focus();
+  });
+
+  function showMessage(name,age){
+    const safeName=safeText(name);
+    const safeAge=safeText(age);
+    greeting.textContent=`سلام ${safeName} — چطوری؟`;
+    const template=`می‌دونم اسمت ${safeName}ـه و حتی می‌دونم
+${safeAge} سالته.
+
+ولی ${safeName} جان باور کن این ذره‌ای برام اهمیت نداره.
+
+تنها چیزی که برام مهمه اینه که بیای
+کافه ما یه چیزی سفارش بدی، ما فروشمون بیشتر شه، آخر ماه چک داریم.
+
+عشق منی‌ها، ولی اگه نیای
+خیلی خری.
+ابلفضلی نامردی.
+
+دلخور نشیا ولی ایشالا بری زیر تریلی!
+
+اگه نیای...
+قربونت برم، بازم خودت می‌دونی من هیچ اجباری ندارم.
+
+لینک پیجمونو برات گذاشتم، خواستی بیا، نخواستی خاک تو سرت، لیاقت نداری.`;
+    fullMessage.textContent=template;
+    entry.classList.add('hidden');
+    message.classList.remove('hidden');
+    document.getElementById('backBtn').focus();
+  }
+
+  nameInput.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      ageInput.focus();
+    }
+  });
+
+  ageInput.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      document.getElementById('startBtn').click();
+    }
+  });
+
+  nameInput.focus();
+</script>
+</body>
+</html>
